@@ -328,8 +328,16 @@ def create_pdf_report(path, client_name, scores, report_text, timestamp):
         lvl  = get_level(sc)
         meta = TRAIT_META[t]
         tc   = TRAIT_COLORS[t]
-        bar_filled = int((sc / 40) * 28)
-        bar = "█" * bar_filled + "░" * (28 - bar_filled)
+        bar_filled = max(0, min(28, int((sc / 40) * 28)))
+        bar_empty  = 28 - bar_filled
+        hex_color  = meta["color"].lstrip("#")
+        bar_filled_str = "█" * bar_filled
+        bar_empty_str  = "░" * bar_empty
+        bar_para = Paragraph(
+            f'<font color="#{hex_color}">{bar_filled_str}</font>'
+            f'<font color="#CCCCCC">{bar_empty_str}</font>',
+            ParagraphStyle("BR", fontName="Courier", fontSize=8, leading=12)
+        )
         score_rows.append([
             Paragraph(f"<b>{meta['name']} ({t})</b>",
                       ParagraphStyle("TN", fontName="Helvetica-Bold", fontSize=9, textColor=tc)),
@@ -337,8 +345,7 @@ def create_pdf_report(path, client_name, scores, report_text, timestamp):
                       ParagraphStyle("SC", fontName="Helvetica-Bold", fontSize=9, textColor=tc, alignment=TA_CENTER)),
             Paragraph(lvl,
                       ParagraphStyle("LV", fontName="Helvetica", fontSize=9, textColor=DARK, alignment=TA_CENTER)),
-            Paragraph(f'<font color="#{tc.hexval()[2:]}">{bar}</font>',
-                      ParagraphStyle("BR", fontName="Courier", fontSize=7, textColor=tc)),
+            bar_para,
         ])
 
     st_table = Table(score_rows, colWidths=[4.5*cm, 2*cm, 2.5*cm, 8*cm])
